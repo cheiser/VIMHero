@@ -1,0 +1,38 @@
+[
+  {
+    "challengeId": "copy-001",
+    "title": "Copy Current Line",
+    "prompt": "Copy the full current line.",
+    "sourceText": "alpha beta gamma",
+    "targetInstruction": "Use a valid Vim copy combination.",
+    "allowedKeyCombos": ["yy", "Y"],
+    "hintText": "Try line yank commands.",
+    "solutionText": "Use yy (or Y) in normal mode.",
+    "hintAtSeconds": 30,
+    "solutionAtSeconds": 90
+  },
+  {
+    "challengeId": "copy-002",
+    "title": "Copy Current Word",
+    "prompt": "Copy the current word only.",
+    "sourceText": "delta epsilon zeta",
+    "targetInstruction": "Use a valid word yank combination.",
+    "allowedKeyCombos": ["yiw"],
+    "hintText": "Think text-objects for current word.",
+    "solutionText": "Use yiw in normal mode.",
+    "hintAtSeconds": 30,
+    "solutionAtSeconds": 90
+  },
+  {
+    "challengeId": "copy-003",
+    "title": "Copy To End Of Line",
+    "prompt": "Copy from cursor to line end.",
+    "sourceText": "vim hero training",
+    "targetInstruction": "Use a valid to-end yank combination.",
+    "allowedKeyCombos": ["y$"],
+    "hintText": "Use a motion that reaches line end.",
+    "solutionText": "Use y$ in normal mode.",
+    "hintAtSeconds": 30,
+    "solutionAtSeconds": 90
+  }
+]

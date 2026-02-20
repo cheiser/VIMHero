@@ -1,0 +1,142 @@
+:root {
+  --bg-start: #f0f4f8;
+  --bg-end: #e8f4ef;
+  --text-main: #142433;
+  --text-muted: #4c6173;
+  --panel-bg: #ffffff;
+  --panel-border: #cfdae5;
+  --accent: #1b7f52;
+  --danger: #af1f38;
+  --hint: #785a00;
+  --solution: #3c2a8a;
+  --focus: #2768d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text-main);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+}
+
+.app {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.masthead {
+  grid-column: 1 / -1;
+}
+
+h1,
+h2 {
+  margin: 0 0 0.5rem;
+}
+
+p {
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.timer {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.status {
+  min-height: 1.25rem;
+}
+
+.ok {
+  color: var(--accent);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.hint {
+  color: var(--hint);
+}
+
+.solution {
+  color: var(--solution);
+}
+
+.code,
+#eventHistory,
+#sessionSummary {
+  min-height: 92px;
+  white-space: pre-wrap;
+  background: #0f1823;
+  color: #e5edf3;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+}

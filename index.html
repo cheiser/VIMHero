@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VIMHero</title>
+  <link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+  <main class="app" aria-label="VIMHero training app">
+    <header class="panel masthead">
+      <h1>VIMHero</h1>
+      <p>Timed Vim copy-text challenges with delayed guidance and progress tracking.</p>
+    </header>
+
+    <section class="panel challenge" aria-labelledby="challenge-title">
+      <h2 id="challenge-title">Challenge Panel</h2>
+      <label for="challengeSelect">Choose challenge</label>
+      <select id="challengeSelect"></select>
+      <button id="startBtn" type="button">Start Attempt</button>
+      <p id="prompt" class="status"></p>
+      <pre id="sourceText" class="code" aria-label="Source text"></pre>
+    </section>
+
+    <section class="panel input" aria-labelledby="submission-title">
+      <h2 id="submission-title">Submission Panel</h2>
+      <p id="timer" class="timer" aria-live="polite">00:00</p>
+
+      <label for="keyCombo">Submitted key combo</label>
+      <input id="keyCombo" name="keyCombo" type="text" autocomplete="off" placeholder="e.g. yy">
+
+      <label for="outputText">Submitted output</label>
+      <textarea id="outputText" name="outputText" rows="5"></textarea>
+
+      <button id="submitBtn" type="button">Submit</button>
+      <p id="feedback" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel guidance" aria-labelledby="guidance-title">
+      <h2 id="guidance-title">Guidance Panel</h2>
+      <p id="hint" class="hint" aria-live="polite"></p>
+      <p id="solution" class="solution" aria-live="polite"></p>
+    </section>
+
+    <section class="panel progress" aria-labelledby="progress-title">
+      <h2 id="progress-title">Progress Panel</h2>
+      <p id="score">Score: 0</p>
+      <p id="streak">Streak: 0 (Best: 0)</p>
+      <pre id="sessionSummary" aria-label="Session summary"></pre>
+    </section>
+
+    <section class="panel events" aria-labelledby="events-title">
+      <h2 id="events-title">Event History</h2>
+      <pre id="eventHistory" aria-label="Event history"></pre>
+    </section>
+  </main>
+
+  <script src="scripts/progress-store.js"></script>
+  <script src="scripts/perf-metrics.js"></script>
+  <script src="scripts/event-log.js"></script>
+  <script src="scripts/timer.js"></script>
+  <script src="scripts/challenge-engine.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>

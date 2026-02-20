@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>VIMHero Unit Tests</title>
+  <style>
+    body { font-family: Consolas, 'Courier New', monospace; margin: 1rem; }
+    #testOutput { white-space: pre-wrap; border: 1px solid #ccc; padding: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>VIMHero Unit Tests</h1>
+  <pre id="testOutput">Running...</pre>
+
+  <script src="../../scripts/progress-store.js"></script>
+  <script src="../../scripts/timer.js"></script>
+  <script src="../../scripts/challenge-engine.js"></script>
+  <script src="../../scripts/perf-metrics.js"></script>
+  <script src="test-helpers.js"></script>
+
+  <script src="progress-store.foundation.test.js"></script>
+  <script src="timer.foundation.test.js"></script>
+  <script src="challenge-engine.foundation.test.js"></script>
+  <script src="challenge-engine.us1.test.js"></script>
+  <script src="timer.us1.test.js"></script>
+  <script src="guidance.us2.test.js"></script>
+  <script src="guidance-threshold.us2.test.js"></script>
+  <script src="progress.us3.test.js"></script>
+  <script src="session-summary.us3.test.js"></script>
+
+  <script>
+    window.TestRunner.run();
+  </script>
+</body>
+</html>

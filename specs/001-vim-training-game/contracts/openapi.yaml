@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: Vim Mastery Challenge Contract
+  version: 1.0.0
+  description: Contract for copy-text challenge flow, timing, validation, guidance, and progress tracking.
+servers:
+  - url: http://localhost
+paths:
+  /challenges:
+    get:
+      summary: List MVP copy-text challenges
+      x-frontend-action: loadChallenges
+      responses:
+        '200':
+          description: Challenges returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Challenge'
+  /challenges/{challengeId}/attempts:
+    post:
+      summary: Start timed attempt
+      x-frontend-action: startAttempt
+      parameters:
+        - in: path
+          name: challengeId
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Attempt started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+  /attempts/{attemptId}/submit:
+    post:
+      summary: Submit key combination and output for validation
+      x-frontend-action: submitAttempt
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [submittedKeyCombo, submittedOutput]
+              properties:
+                submittedKeyCombo:
+                  type: string
+                submittedOutput:
+                  type: string
+      responses:
+        '200':
+          description: Validation result returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, allowedCombo, elapsedMs]
+                properties:
+                  status:
+                    type: string
+                    enum: [in_progress, passed, failed]
+                  allowedCombo:
+                    type: boolean
+                  elapsedMs:
+                    type: integer
+                  errorMessage:
+                    type: string
+  /attempts/{attemptId}/guidance:
+    get:
+      summary: Return time-based guidance state
+      x-frontend-action: refreshGuidance
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Guidance payload
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hintVisible, solutionVisible]
+                properties:
+                  hintVisible:
+                    type: boolean
+                  solutionVisible:
+                    type: boolean
+                  hintText:
+                    type: string
+                  solutionText:
+                    type: string
+  /profile:
+    get:
+      summary: Read learner profile
+      x-frontend-action: getProfile
+      responses:
+        '200':
+          description: Profile returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearnerProfile'
+  /sessions/current/summary:
+    get:
+      summary: Read current session summary
+      x-frontend-action: getSessionSummary
+      responses:
+        '200':
+          description: Session summary returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionSummary'
+components:
+  schemas:
+    Challenge:
+      type: object
+      required:
+        - challengeId
+        - title
+        - prompt
+        - sourceText
+        - allowedKeyCombos
+        - hintAtSeconds
+        - solutionAtSeconds
+      properties:
+        challengeId:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        sourceText:
+          type: string
+        targetInstruction:
+          type: string
+        allowedKeyCombos:
+          type: array
+          items:
+            type: string
+        hintText:
+          type: string
+        solutionText:
+          type: string
+        hintAtSeconds:
+          type: integer
+          example: 30
+        solutionAtSeconds:
+          type: integer
+          example: 90
+    Attempt:
+      type: object
+      required:
+        - attemptId
+        - challengeId
+        - startedAt
+        - status
+        - hintShown
+        - solutionShown
+      properties:
+        attemptId:
+          type: string
+        challengeId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        elapsedMs:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [in_progress, passed, failed, abandoned]
+        submittedKeyCombo:
+          type: string
+          nullable: true
+        submittedOutput:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        hintShown:
+          type: boolean
+        solutionShown:
+          type: boolean
+    LearnerProfile:
+      type: object
+      required:
+        - profileId
+        - totalScore
+        - currentStreak
+        - bestStreak
+        - completedChallenges
+        - totalAttempts
+      properties:
+        profileId:
+          type: string
+        totalScore:
+          type: integer
+        currentStreak:
+          type: integer
+        bestStreak:
+          type: integer
+        completedChallenges:
+          type: integer
+        totalAttempts:
+          type: integer
+        lastActiveAt:
+          type: string
+          format: date-time
+          nullable: true
+    SessionSummary:
+      type: object
+      required:
+        - sessionId
+        - startedAt
+        - attemptsCount
+        - passedCount
+        - failedCount
+        - hintsShownCount
+        - solutionsShownCount
+      properties:
+        sessionId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        attemptsCount:
+          type: integer
+        passedCount:
+          type: integer
+        failedCount:
+          type: integer
+        averageCompletionMs:
+          type: integer
+          nullable: true
+        hintsShownCount:
+          type: integer
+        solutionsShownCount:
+          type: integer
