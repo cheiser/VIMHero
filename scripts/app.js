@@ -1,6 +1,9 @@
 (function () {
   var state = {
     challenges: [],
+    visibleChallenges: [],
+    commandGroups: [],
+    selectedGroupId: 'mixed',
     currentChallenge: null,
     currentAttempt: null,
     timer: null,
@@ -23,6 +26,15 @@
     element('timer').textContent = text;
   }
 
+  function focusKeyComboInput() {
+    var keyComboInput = element('keyCombo');
+    if (!keyComboInput) {
+      return;
+    }
+
+    keyComboInput.focus();
+  }
+
   function setGuidance(stateGuidance) {
     var hint = element('hint');
     var solution = element('solution');
@@ -41,6 +53,26 @@
     }
   }
 
+  function renderCommandProgress() {
+    var output = element('commandProgress');
+    var rows = window.progressStore.getAllCommandProgress();
+    if (!rows.length) {
+      output.textContent = 'No command progress yet.';
+      return;
+    }
+
+    output.textContent = rows
+      .map(function (row) {
+        return [
+          row.commandId,
+          'attempts=' + row.attemptsCount,
+          'success=' + row.successCount,
+          'status=' + row.masteryStatus
+        ].join(' | ');
+      })
+      .join('\n');
+  }
+
   function renderProgress() {
     var profile = window.progressStore.getProfile();
     var session = window.progressStore.getSession();
@@ -55,13 +87,65 @@
       'Hints shown: ' + session.hintsShownCount,
       'Solutions shown: ' + session.solutionsShownCount
     ].join('\n');
+
+    renderCommandProgress();
   }
 
   function selectedChallenge() {
     var challengeId = element('challengeSelect').value;
-    return state.challenges.find(function (challenge) {
+    return state.visibleChallenges.find(function (challenge) {
       return challenge.challengeId === challengeId;
     }) || null;
+  }
+
+  function populateChallenges(challenges) {
+    var select = element('challengeSelect');
+    select.innerHTML = '';
+
+    challenges.forEach(function (challenge, index) {
+      var option = document.createElement('option');
+      option.value = challenge.challengeId;
+      option.textContent = (index + 1) + '. ' + challenge.title;
+      select.appendChild(option);
+    });
+
+    if (challenges.length) {
+      state.currentChallenge = challenges[0];
+      select.value = state.currentChallenge.challengeId;
+    } else {
+      state.currentChallenge = null;
+      setFeedback('No commands available for selected group. Using mixed fallback.', true);
+    }
+  }
+
+  function populateGroups(groups) {
+    var select = element('groupSelect');
+    select.innerHTML = '';
+
+    var mixed = document.createElement('option');
+    mixed.value = 'mixed';
+    mixed.textContent = 'Mixed (all groups)';
+    select.appendChild(mixed);
+
+    groups.forEach(function (group) {
+      var option = document.createElement('option');
+      option.value = group.groupId;
+      option.textContent = group.name;
+      select.appendChild(option);
+    });
+
+    select.value = 'mixed';
+  }
+
+  function applyGroupFilter(groupId) {
+    state.selectedGroupId = groupId || 'mixed';
+    state.visibleChallenges = window.challengeEngine.filterChallengesByGroup(state.challenges, state.selectedGroupId);
+
+    populateChallenges(state.visibleChallenges);
+    window.eventLog.addTyped(window.eventLog.eventTypes.GROUP_SELECTED, {
+      groupId: state.selectedGroupId,
+      challengeCount: state.visibleChallenges.length
+    });
   }
 
   function startAttempt() {
@@ -75,6 +159,7 @@
     state.currentAttempt = {
       attemptId: 'attempt-' + Date.now(),
       challengeId: challenge.challengeId,
+      commandId: challenge.challengeId,
       startedAt: new Date().toISOString(),
       status: 'in_progress'
     };
@@ -88,12 +173,18 @@
     element('hint').textContent = '';
     element('solution').textContent = '';
     setFeedback('Challenge started. Timer is running.', false);
+    focusKeyComboInput();
 
     var startedAtMark = window.perfMetrics.start('challenge_start');
     window.progressStore.recordAttemptStart(state.currentAttempt);
     window.eventLog.add('start', {
       attemptId: state.currentAttempt.attemptId,
       challengeId: challenge.challengeId
+    });
+    window.eventLog.addTyped(window.eventLog.eventTypes.PROMPT_SERVED, {
+      attemptId: state.currentAttempt.attemptId,
+      challengeId: challenge.challengeId,
+      groupId: challenge.groupId
     });
 
     state.guidanceScheduler = window.challengeEngine.createGuidanceScheduler(challenge, setGuidance);
@@ -123,6 +214,7 @@
     var submittedKeyCombo = element('keyCombo').value;
     var submittedOutput = element('outputText').value;
     var startedAtMark = window.perfMetrics.start('submit');
+    var evalMark = window.perfMetrics.start('submit_evaluate');
 
     var result = window.challengeEngine.validateSubmission(
       state.currentChallenge,
@@ -137,6 +229,13 @@
         submittedKeyCombo: submittedKeyCombo,
         reason: result.errorMessage
       });
+      window.eventLog.addTyped(window.eventLog.eventTypes.EVALUATE_FAIL, {
+        attemptId: state.currentAttempt.attemptId,
+        challengeId: state.currentChallenge.challengeId,
+        groupId: state.currentChallenge.groupId,
+        reason: result.errorMessage
+      });
+      window.perfMetrics.end('submit_evaluate', evalMark);
       window.perfMetrics.end('submit', startedAtMark);
       return;
     }
@@ -155,7 +254,8 @@
       state.solutionShown,
       submittedKeyCombo,
       submittedOutput,
-      isError ? result.errorMessage : ''
+      isError ? result.errorMessage : '',
+      state.currentChallenge.challengeId
     );
 
     window.eventLog.add(result.status, {
@@ -164,8 +264,14 @@
       elapsedMs: elapsedMs,
       submittedKeyCombo: submittedKeyCombo
     });
+    window.eventLog.addTyped(window.eventLog.eventTypes.PROGRESS_WRITE, {
+      attemptId: state.currentAttempt.attemptId,
+      challengeId: state.currentChallenge.challengeId,
+      status: result.status
+    });
 
     state.currentAttempt.status = result.status;
+    window.perfMetrics.end('submit_evaluate', evalMark);
     window.perfMetrics.end('submit', startedAtMark);
     renderProgress();
   }
@@ -184,33 +290,33 @@
     setGuidance(guidance);
   }
 
-  function populateChallenges(challenges) {
-    var select = element('challengeSelect');
-    select.innerHTML = '';
-
-    challenges.forEach(function (challenge, index) {
-      var option = document.createElement('option');
-      option.value = challenge.challengeId;
-      option.textContent = (index + 1) + '. ' + challenge.title;
-      select.appendChild(option);
-    });
-  }
-
   function init() {
     state.timer = window.timerModule.createTimer(updateTick);
     setTimerText(window.timerModule.format(0));
 
     window.challengeEngine.loadChallenges().then(function (challenges) {
       state.challenges = challenges;
-      populateChallenges(challenges);
-      if (challenges.length) {
-        state.currentChallenge = challenges[0];
-      }
+      state.commandGroups = window.challengeEngine.getCommandGroups(challenges);
+      populateGroups(state.commandGroups);
+      applyGroupFilter('mixed');
     });
+
+    var onGroupChange = function () {
+      applyGroupFilter(element('groupSelect').value);
+    };
+    element('groupSelect').addEventListener('change', onGroupChange);
+    element('groupSelect').addEventListener('input', onGroupChange);
 
     element('startBtn').addEventListener('click', startAttempt);
     element('submitBtn').addEventListener('click', submitAttempt);
+    element('keyCombo').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        submitAttempt();
+      }
+    });
 
+    focusKeyComboInput();
     renderProgress();
   }
 

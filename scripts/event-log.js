@@ -1,5 +1,11 @@
 (function () {
   var events = [];
+  var EVENT_TYPES = {
+    GROUP_SELECTED: 'group_selected',
+    PROMPT_SERVED: 'prompt_served',
+    EVALUATE_FAIL: 'evaluate_fail',
+    PROGRESS_WRITE: 'progress_write'
+  };
 
   function safeStringify(value) {
     try {
@@ -28,6 +34,7 @@
   }
 
   window.eventLog = {
+    eventTypes: EVENT_TYPES,
     add: function (event, details) {
       events.push({
         event: event,
@@ -35,6 +42,10 @@
         at: new Date().toISOString()
       });
       render();
+    },
+    addTyped: function (type, payload) {
+      var safePayload = payload && typeof payload === 'object' ? payload : {};
+      this.add(type, safePayload);
     },
     list: function () {
       return events.slice();

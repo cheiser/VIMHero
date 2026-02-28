@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: Expanded Vim Command Coverage Contract
+  version: 1.0.0
+  description: >-
+    Contract for listing additional commands, filtering by group,
+    evaluating attempts, and reading command-specific learner progress.
+servers:
+  - url: http://localhost
+paths:
+  /command-groups:
+    get:
+      summary: List available command groups for focused practice
+      x-frontend-action: loadCommandGroups
+      x-observability-event: group_selected
+      responses:
+        '200':
+          description: Command groups returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommandGroup'
+  /commands:
+    get:
+      summary: List active commands
+      x-frontend-action: loadCommands
+      x-observability-event: prompt_served
+      parameters:
+        - in: query
+          name: groupId
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Commands returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommandDefinition'
+  /sessions/{sessionId}/prompts:
+    post:
+      summary: Generate next command prompt for a practice session
+      x-frontend-action: generatePrompt
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                groupId:
+                  type: string
+      responses:
+        '200':
+          description: Prompt generated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [commandId, trainingPrompt, expectedOutcome]
+                properties:
+                  commandId:
+                    type: string
+                  trainingPrompt:
+                    type: string
+                  expectedOutcome:
+                    type: string
+  /attempts/{attemptId}/evaluate:
+    post:
+      summary: Evaluate learner input for a command attempt
+      x-frontend-action: evaluateAttempt
+      x-observability-event: evaluate_fail
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commandId, submittedInput]
+              properties:
+                commandId:
+                  type: string
+                submittedInput:
+                  type: string
+      responses:
+        '200':
+          description: Evaluation result returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [isCorrect, feedbackMessage]
+                properties:
+                  isCorrect:
+                    type: boolean
+                  feedbackMessage:
+                    type: string
+                  guidanceText:
+                    type: string
+  /profiles/{profileId}/command-progress:
+    get:
+      summary: Retrieve learner progress per command
+      x-frontend-action: loadCommandProgress
+      x-observability-event: progress_write
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: commandId
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Command progress returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommandProgress'
+components:
+  schemas:
+    CommandGroup:
+      type: object
+      required: [groupId, name, description, displayOrder]
+      properties:
+        groupId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        displayOrder:
+          type: integer
+    CommandDefinition:
+      type: object
+      required:
+        [commandId, keySequence, groupId, title, trainingPrompt, expectedOutcome, guidanceText, difficultyLevel, isActive]
+      properties:
+        commandId:
+          type: string
+        keySequence:
+          type: string
+        groupId:
+          type: string
+        title:
+          type: string
+        trainingPrompt:
+          type: string
+        expectedOutcome:
+          type: string
+        guidanceText:
+          type: string
+        difficultyLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        isActive:
+          type: boolean
+    CommandProgress:
+      type: object
+      required: [profileId, commandId, attemptsCount, successCount, masteryStatus]
+      properties:
+        profileId:
+          type: string
+        commandId:
+          type: string
+        attemptsCount:
+          type: integer
+        successCount:
+          type: integer
+        masteryStatus:
+          type: string
+          enum: [unseen, learning, proficient]
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true

@@ -15,6 +15,8 @@
 
     <section class="panel challenge" aria-labelledby="challenge-title">
       <h2 id="challenge-title">Challenge Panel</h2>
+      <label for="groupSelect">Choose command group</label>
+      <select id="groupSelect"></select>
       <label for="challengeSelect">Choose challenge</label>
       <select id="challengeSelect"></select>
       <button id="startBtn" type="button">Start Attempt</button>
@@ -47,6 +49,8 @@
       <p id="score">Score: 0</p>
       <p id="streak">Streak: 0 (Best: 0)</p>
       <pre id="sessionSummary" aria-label="Session summary"></pre>
+      <h3>Per-Command Progress</h3>
+      <pre id="commandProgress" aria-label="Per-command progress"></pre>
     </section>
 
     <section class="panel events" aria-labelledby="events-title">

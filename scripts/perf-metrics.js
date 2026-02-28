@@ -1,4 +1,9 @@
 (function () {
+  var budgets = {
+    submit: 1000,
+    submit_evaluate: 1000
+  };
+
   function now() {
     return Date.now();
   }
@@ -33,6 +38,16 @@
     },
     p95: function (label) {
       return percentile(this.durations(label), 0.95);
+    },
+    isWithinBudget: function (label) {
+      var budgetMs = budgets[label];
+      if (typeof budgetMs !== 'number') {
+        return true;
+      }
+      return this.p95(label) <= budgetMs;
+    },
+    getBudget: function (label) {
+      return budgets[label];
     },
     clear: function () {
       this.marks = [];
